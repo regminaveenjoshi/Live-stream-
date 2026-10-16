@@ -1,0 +1,12 @@
+{
+  "stream": {
+    "stream_url": null,
+    "is_live": false,
+    "current_match": null
+  },
+  "matches": [],
+  "settings": {
+    "telegram_link": "https://t.me/",
+    "admin_pass": "admin123"
+  }
+}
