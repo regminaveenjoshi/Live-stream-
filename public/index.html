@@ -54,6 +54,9 @@
         </div>
         <div id="loadingScreen" class="hidden absolute inset-0 flex items-center justify-center bg-black/70 z-20"><div class="spinner"></div></div>
         <video id="video" class="w-full h-full object-contain" controls playsinline></video>
+        <iframe id="embedPlayer" class="hidden absolute inset-0 w-full h-full"
+          title="Authorized live stream" allow="autoplay; encrypted-media; picture-in-picture"
+          allowfullscreen referrerpolicy="strict-origin-when-cross-origin"></iframe>
       </div>
       <div id="matchInfo" class="hidden border-t border-gray-800 bg-brand-dark px-4 py-3">
         <p id="matchTitle" class="font-semibold"></p>
@@ -100,6 +103,7 @@
   <script>
     let hls = null;
     let lastUrl = "";
+    let lastEmbedUrl = "";
 
     async function getData() {
       const res = await fetch("/api");
@@ -129,8 +133,32 @@
       </article>`;
     }
 
+    function playEmbed(url) {
+      // Use only an embed URL supplied by a provider that authorizes your website to display it.
+      if (!url || url === lastEmbedUrl) return;
+      lastEmbedUrl = url;
+      lastUrl = "";
+      if (hls) { hls.destroy(); hls = null; }
+      const video = document.getElementById("video");
+      video.pause();
+      video.removeAttribute("src");
+      video.load();
+      video.classList.add("hidden");
+      const frame = document.getElementById("embedPlayer");
+      frame.classList.remove("hidden");
+      frame.src = url;
+      document.getElementById("offlineScreen").classList.add("hidden");
+      document.getElementById("loadingScreen").classList.add("hidden");
+      document.getElementById("liveBadge").classList.remove("hidden");
+    }
+
     function playStream(url) {
       if (url === lastUrl && hls) return;
+      lastEmbedUrl = "";
+      const frame = document.getElementById("embedPlayer");
+      frame.src = "about:blank";
+      frame.classList.add("hidden");
+      document.getElementById("video").classList.remove("hidden");
       lastUrl = url;
       const video = document.getElementById("video");
       document.getElementById("offlineScreen").classList.add("hidden");
@@ -161,6 +189,11 @@
       if (hls) { hls.destroy(); hls = null; }
       lastUrl = "";
       const video = document.getElementById("video");
+      const frame = document.getElementById("embedPlayer");
+      frame.src = "about:blank";
+      frame.classList.add("hidden");
+      video.classList.remove("hidden");
+      lastEmbedUrl = "";
       video.removeAttribute("src");
       video.load();
       document.getElementById("offlineScreen").classList.remove("hidden");
@@ -177,7 +210,15 @@
           document.getElementById("tgBtn").href = data.settings.telegram_link;
         }
         // Stream
-        if (data.stream && data.stream.is_live && data.stream.stream_url) {
+        if (data.stream && data.stream.is_live && data.stream.embed_url) {
+          playEmbed(data.stream.embed_url);
+          if (data.stream.current_match) {
+            const m = data.stream.current_match;
+            document.getElementById("matchTitle").textContent = m.team_a + " vs " + m.team_b;
+            document.getElementById("matchDate").textContent = formatDate(m.match_date);
+            document.getElementById("matchInfo").classList.remove("hidden");
+          }
+        } else if (data.stream && data.stream.is_live && data.stream.stream_url) {
           playStream(data.stream.stream_url);
           if (data.stream.current_match) {
             const m = data.stream.current_match;
