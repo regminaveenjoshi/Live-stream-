@@ -1,341 +1,224 @@
 <!DOCTYPE html>
 <html lang="en">
 <head>
-  <meta charset="UTF-8" />
-  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-  <title>N4B LIVE Admin</title>
-  <meta name="robots" content="noindex, nofollow" />
-  <script src="https://cdn.tailwindcss.com"></script>
-  <script>
-    tailwind.config = {
-      theme: { extend: { colors: { brand: { black:"#0a0a0a", dark:"#121212", red:"#e10600" } } } }
-    }
-  </script>
-  <style>
-    body { background:#0a0a0a; color:#fff; font-family:system-ui,sans-serif; }
-    input, select, textarea { background:#000; border:1px solid #333; border-radius:8px; padding:10px 12px; width:100%; color:#fff; outline:none; }
-    input:focus, select:focus, textarea:focus { border-color:#e10600; }
-    .btn { background:#e10600; color:#fff; font-weight:600; padding:10px 20px; border-radius:8px; border:none; cursor:pointer; }
-    .btn:hover { background:#b30500; }
-    .btn-gray { background:#222; border:1px solid #444; color:#ccc; padding:10px 16px; border-radius:8px; cursor:pointer; }
-    .btn-gray:hover { background:#333; }
-    .card { background:#121212; border:1px solid #2a2a2a; border-radius:12px; padding:20px; }
-  </style>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>N4B LIVE Admin</title>
+<script src="https://cdn.tailwindcss.com"></script>
+<style>
+body{background:#0a0a0a;color:#fff;font-family:system-ui,sans-serif}
+input,select{background:#000;border:1px solid #333;border-radius:8px;padding:12px;width:100%;color:white}
+button{cursor:pointer;border-radius:8px;padding:11px 18px;font-weight:600}
+.red{background:#e10600;color:white}
+.gray{background:#222;border:1px solid #444}
+.card{background:#121212;border:1px solid #2a2a2a;border-radius:12px;padding:20px}
+</style>
 </head>
-<body class="min-h-screen p-4">
+<body class="p-4">
+<div class="max-w-2xl mx-auto mt-8">
+<h1 class="text-2xl font-bold mb-6">N4B <span class="text-red-600">LIVE</span> Admin</h1>
 
-  <div id="loginScreen" class="max-w-sm mx-auto mt-20">
-    <div class="text-center mb-6">
-      <div class="mx-auto h-14 w-14 rounded-xl bg-brand-red flex items-center justify-center text-xl font-bold mb-3">N4</div>
-      <h1 class="text-2xl font-bold">N4B <span class="text-brand-red">LIVE</span></h1>
-      <p class="text-sm text-gray-500">Admin Login</p>
-    </div>
-    <div class="card">
-      <p id="loginError" class="hidden text-red-400 text-sm mb-3"></p>
-      <label class="text-sm text-gray-400">Password</label>
-      <input type="password" id="loginPass" class="mt-1 mb-4" placeholder="Admin password" />
-      <button class="btn w-full" onclick="doLogin()">Sign In</button>
-    </div>
-  </div>
+<div id="login" class="card mb-5">
+<h2 class="font-bold mb-3">Admin Login</h2>
+<input id="password" type="password" placeholder="Admin password">
+<button class="red w-full mt-3" onclick="login()">Sign In</button>
+<p id="loginMsg" class="text-red-400 mt-2"></p>
+</div>
 
-  <div id="adminPanel" class="hidden max-w-3xl mx-auto">
-    <div class="flex items-center justify-between mb-6">
-      <div class="flex items-center gap-2">
-        <div class="h-8 w-8 rounded bg-brand-red flex items-center justify-center text-sm font-bold">N4</div>
-        <span class="font-bold">N4B <span class="text-brand-red">LIVE</span> Admin</span>
-      </div>
-      <div class="flex gap-2 items-center">
-        <a href="index.html" target="_blank" class="text-sm text-gray-400 hover:text-white">View Site ↗</a>
-        <button class="btn-gray text-sm" onclick="doLogout()">Logout</button>
-      </div>
-    </div>
+<div id="panel" class="hidden space-y-5">
+<div class="card space-y-4">
+<h2 class="text-xl font-bold">Live Stream Control</h2>
 
-    <p id="msg" class="hidden fixed top-4 right-4 z-50 px-4 py-2 rounded-lg text-sm font-medium"></p>
+<label class="block text-sm">Stream Type</label>
+<select id="type" onchange="changeType()">
+<option value="iframe">Authorized iframe embed</option>
+<option value="hls">HLS / M3U8 / MP4</option>
+</select>
 
-    <div class="flex flex-wrap gap-2 mb-6">
-      <button class="tab-btn btn text-sm" data-tab="stream" onclick="showTab('stream')">Live Stream</button>
-      <button class="tab-btn btn-gray text-sm" data-tab="matches" onclick="showTab('matches')">Matches</button>
-      <button class="tab-btn btn-gray text-sm" data-tab="settings" onclick="showTab('settings')">Settings</button>
-    </div>
+<div id="channelBox">
+<label class="block text-sm mb-2">Channel preset</label>
+<select id="channel" onchange="chooseChannel()">
+<option value="">Choose channel</option>
+<option value="ss1hin">Star Sports 1 Hindi</option>
+<option value="ss1eng">Star Sports 1 English</option>
+<option value="ss1tam">Star Sports 1 Tamil</option>
+<option value="ss1tel">Star Sports 1 Telugu</option>
+<option value="ss2hin">Star Sports 2 Hindi</option>
+<option value="ss2eng">Star Sports 2 English</option>
+<option value="ss2tam">Star Sports 2 Tamil</option>
+<option value="ss2tel">Star Sports 2 Telugu</option>
+</select>
+<p class="text-xs text-gray-500 mt-2">
+Use only provider-approved embed URLs. Channel page links are not automatically embed URLs.
+</p>
+</div>
 
-    <!-- STREAM -->
-    <div id="tab-stream" class="card space-y-4">
-      <h2 class="text-lg font-bold">Live Stream Control</h2>
-      <div class="flex items-center gap-2">
-        <span id="statusDot" class="h-3 w-3 rounded-full bg-gray-600"></span>
-        <span class="text-sm text-gray-400">Status: <strong id="statusText">OFFLINE</strong></span>
-      </div>
-      <div>
-        <label class="text-sm text-gray-400">Stream URL (m3u8 / mp4)</label>
-        <input type="url" id="streamUrl" placeholder="https://example.com/live/stream.m3u8" class="mt-1" />
-        <p class="text-xs text-gray-600 mt-1">Sirf authorized URL. Khali = OFFLINE</p>
-      </div>
-      <div>
-        <label class="text-sm text-gray-400">Linked Match</label>
-        <select id="streamMatch" class="mt-1"><option value="">— None —</option></select>
-      </div>
-      <label class="flex items-center gap-2 text-sm">
-        <input type="checkbox" id="isLive" class="accent-red-600" /> Set as LIVE
-      </label>
-      <div class="flex flex-wrap gap-3">
-        <button class="btn" onclick="saveStream()">Save & Apply</button>
-        <button class="btn-gray" onclick="stopStream()">Stop Stream</button>
-      </div>
-    </div>
+<div>
+<label id="urlLabel" class="block text-sm mb-2">Iframe Embed URL</label>
+<input id="streamUrl" type="url" placeholder="Paste authorized embed URL">
+</div>
 
-    <!-- MATCHES -->
-    <div id="tab-matches" class="hidden space-y-4">
-      <div class="card space-y-3">
-        <h2 class="text-lg font-bold" id="matchFormTitle">Add Match</h2>
-        <div class="grid sm:grid-cols-2 gap-3">
-          <div><label class="text-sm text-gray-400">Team A</label><input id="teamA" placeholder="India" class="mt-1" /></div>
-          <div><label class="text-sm text-gray-400">Team B</label><input id="teamB" placeholder="Australia" class="mt-1" /></div>
-          <div><label class="text-sm text-gray-400">Date & Time</label><input type="datetime-local" id="matchDate" class="mt-1" /></div>
-          <div>
-            <label class="text-sm text-gray-400">Status</label>
-            <select id="matchStatus" class="mt-1">
-              <option value="upcoming">Upcoming</option>
-              <option value="live">Live</option>
-              <option value="completed">Completed</option>
-            </select>
-          </div>
-          <div class="sm:col-span-2"><label class="text-sm text-gray-400">Poster URL</label><input type="url" id="posterUrl" placeholder="https://..." class="mt-1" /></div>
-        </div>
-        <div class="flex gap-3">
-          <button class="btn" onclick="saveMatch()">Save Match</button>
-          <button class="btn-gray hidden" id="cancelEdit" onclick="resetMatchForm()">Cancel</button>
-        </div>
-      </div>
-      <div class="card">
-        <h2 class="text-lg font-bold mb-3">All Matches</h2>
-        <div id="matchList" class="space-y-2"></div>
-      </div>
-    </div>
+<label class="flex items-center gap-2">
+<input id="live" type="checkbox" style="width:auto">
+Set as LIVE
+</label>
 
-    <!-- SETTINGS -->
-    <div id="tab-settings" class="hidden card space-y-4">
-      <h2 class="text-lg font-bold">Settings</h2>
-      <div>
-        <label class="text-sm text-gray-400">Telegram Link</label>
-        <input type="url" id="tgLink" placeholder="https://t.me/yourchannel" class="mt-1" />
-      </div>
-      <button class="btn" onclick="saveSettings()">Save Settings</button>
-    </div>
-  </div>
+<div class="flex gap-3">
+<button class="red" onclick="saveStream()">Save & Apply</button>
+<button class="gray" onclick="stopStream()">Stop Stream</button>
+</div>
+<p id="status" class="text-sm text-gray-400"></p>
+</div>
 
-  <script>
-    let data = null;
-    let editId = null;
-    let adminPass = sessionStorage.getItem("n4b_pass") || "";
+<div class="card space-y-3">
+<h2 class="text-xl font-bold">Telegram Settings</h2>
+<input id="telegram" type="url" placeholder="https://t.me/yourchannel">
+<button class="red" onclick="saveTelegram()">Save Telegram Link</button>
+</div>
+</div>
+</div>
 
-    async function callApi(action, payload) {
-      const res = await fetch("/api", {
-        method: "POST",
-        headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ pass: adminPass, action, data: payload })
-      });
-      if (res.status === 401) throw new Error("AUTH");
-      if (!res.ok) throw new Error("Request failed");
-      return await res.json();
-    }
+<script>
+let pass = "";
+let data = null;
 
-    async function getData() {
-      return await callApi("load");
-    }
+const channelPages = {
+  ss1hin: "https://footxeera1.pages.dev/tara?id=ss1hin",
+  ss1eng: "https://footxeera1.pages.dev/tara?id=ss1",
+  ss1tam: "https://footxeera1.pages.dev/tara?id=ss1tam",
+  ss1tel: "https://footxeera1.pages.dev/tara?id=ss1tel",
+  ss2hin: "https://footxeera1.pages.dev/tara?id=ss2h",
+  ss2eng: "https://footxeera1.pages.dev/tara?id=ss2",
+  ss2tam: "https://footxeera1.pages.dev/tara?id=ss2tam",
+  ss2tel: "https://footxeera1.pages.dev/tara?id=ss2tel"
+};
 
-    async function saveData(newData) {
-      await callApi("save", newData);
-      data = newData;
-      return true;
-    }
+async function api(action, payload) {
+  const res = await fetch("/api", {
+    method: "POST",
+    headers: {"Content-Type":"application/json"},
+    body: JSON.stringify({pass, action, data:payload})
+  });
+  if (!res.ok) throw new Error(res.status === 401 ? "Wrong password" : "API request failed");
+  return res.json();
+}
 
-    function toast(text, ok) {
-      const el = document.getElementById("msg");
-      el.textContent = text;
-      el.className = "fixed top-4 right-4 z-50 px-4 py-2 rounded-lg text-sm font-medium " + (ok ? "bg-green-900 text-green-200" : "bg-red-900 text-red-200");
-      el.classList.remove("hidden");
-      setTimeout(() => el.classList.add("hidden"), 3000);
-    }
+async function login() {
+  pass = document.getElementById("password").value;
+  try {
+    data = await api("load");
+    sessionStorage.setItem("n4b_pass", pass);
+    document.getElementById("login").classList.add("hidden");
+    document.getElementById("panel").classList.remove("hidden");
+    render();
+  } catch(e) {
+    document.getElementById("loginMsg").textContent = e.message;
+  }
+}
 
-    function showTab(name) {
-      ["stream","matches","settings"].forEach(t => {
-        document.getElementById("tab-" + t).classList.toggle("hidden", t !== name);
-      });
-      document.querySelectorAll(".tab-btn").forEach(b => {
-        b.className = "tab-btn text-sm " + (b.dataset.tab === name ? "btn" : "btn-gray");
-      });
-    }
+async function init() {
+  pass = sessionStorage.getItem("n4b_pass") || "";
+  if (!pass) return;
+  try {
+    data = await api("load");
+    document.getElementById("login").classList.add("hidden");
+    document.getElementById("panel").classList.remove("hidden");
+    render();
+  } catch {
+    sessionStorage.removeItem("n4b_pass");
+    pass = "";
+  }
+}
 
-    async function doLogin() {
-      adminPass = document.getElementById("loginPass").value;
-      const err = document.getElementById("loginError");
-      try {
-        data = await getData();
-        sessionStorage.setItem("n4b_pass", adminPass);
-        document.getElementById("loginScreen").classList.add("hidden");
-        document.getElementById("adminPanel").classList.remove("hidden");
-        render();
-      } catch (e) {
-        err.textContent = e.message === "AUTH" ? "Galat password" : "Server error, thodi der baad try karo";
-        err.classList.remove("hidden");
-      }
-    }
+function render() {
+  const s = data.stream || {};
+  document.getElementById("type").value = s.embed_url ? "iframe" : "hls";
+  document.getElementById("streamUrl").value = s.embed_url || s.stream_url || "";
+  document.getElementById("live").checked = !!s.is_live;
+  document.getElementById("telegram").value = data.settings?.telegram_link || "";
+  changeType();
+}
 
-    function doLogout() {
-      sessionStorage.removeItem("n4b_pass");
-      location.reload();
-    }
+function changeType() {
+  const iframe = document.getElementById("type").value === "iframe";
+  document.getElementById("channelBox").classList.toggle("hidden", !iframe);
+  document.getElementById("urlLabel").textContent =
+    iframe ? "Iframe Embed URL" : "HLS / M3U8 / MP4 URL";
+  document.getElementById("streamUrl").placeholder =
+    iframe ? "Paste provider-approved embed URL" : "https://example.com/live.m3u8";
+}
 
-    if (adminPass) {
-      getData().then(d => {
-        data = d;
-        document.getElementById("loginScreen").classList.add("hidden");
-        document.getElementById("adminPanel").classList.remove("hidden");
-        render();
-      }).catch(() => { sessionStorage.removeItem("n4b_pass"); adminPass = ""; });
-    }
+function chooseChannel() {
+  const key = document.getElementById("channel").value;
+  if (key) document.getElementById("streamUrl").value = channelPages[key];
+}
 
-    function render() {
-      if (!data) return;
-      // Stream
-      const s = data.stream || {};
-      document.getElementById("streamUrl").value = s.stream_url || "";
-      document.getElementById("isLive").checked = !!s.is_live;
-      document.getElementById("statusDot").className = "h-3 w-3 rounded-full " + (s.is_live ? "bg-green-500 animate-pulse" : "bg-gray-600");
-      document.getElementById("statusText").textContent = s.is_live ? "LIVE" : "OFFLINE";
-      document.getElementById("statusText").className = s.is_live ? "text-green-400" : "text-gray-500";
-      // Match dropdown
-      const sel = document.getElementById("streamMatch");
-      sel.innerHTML = '<option value="">— None —</option>';
-      (data.matches || []).filter(m => m.status !== "completed").forEach(m => {
-        const opt = document.createElement("option");
-        opt.value = m.id;
-        opt.textContent = m.team_a + " vs " + m.team_b;
-        if (s.current_match && s.current_match.id === m.id) opt.selected = true;
-        sel.appendChild(opt);
-      });
-      // Match list
-      document.getElementById("matchList").innerHTML = (data.matches || []).map(m => `
-        <div class="flex flex-wrap items-center justify-between gap-2 border border-gray-800 rounded-lg px-3 py-2 bg-black">
-          <div>
-            <p class="font-medium text-sm">${m.team_a} <span class="text-red-500">vs</span> ${m.team_b}</p>
-            <p class="text-xs text-gray-500">${new Date(m.match_date).toLocaleString("en-IN")} · ${m.status}</p>
-          </div>
-          <div class="flex gap-2">
-            <button class="btn-gray text-xs py-1 px-2" onclick='editMatch("${m.id}")'>Edit</button>
-            <button class="text-xs px-2 py-1 rounded border border-red-900 text-red-400" onclick="deleteMatch('${m.id}')">Del</button>
-          </div>
-        </div>
-      `).join("") || '<p class="text-gray-500 text-sm">No matches</p>';
-      // Settings
-      document.getElementById("tgLink").value = (data.settings && data.settings.telegram_link) || "";
-    }
+async function saveStream() {
+  const url = document.getElementById("streamUrl").value.trim();
+  const live = document.getElementById("live").checked;
+  const iframe = document.getElementById("type").value === "iframe";
 
-    async function saveStream() {
-      const url = document.getElementById("streamUrl").value.trim();
-      const matchId = document.getElementById("streamMatch").value;
-      const live = document.getElementById("isLive").checked && !!url;
-      let current_match = null;
-      if (matchId) {
-        current_match = (data.matches || []).find(m => m.id === matchId) || null;
-        if (current_match && live) current_match.status = "live";
-      }
-      data.stream = { stream_url: url || null, is_live: live, current_match };
-      try {
-        await saveData(data);
-        toast(live ? "LIVE ho gaya!" : "Updated", true);
-        render();
-      } catch { toast("Save fail", false); }
-    }
+  if (live && !url) {
+    return showStatus("URL paste karo.", false);
+  }
 
-    async function stopStream() {
-      if (data.stream && data.stream.current_match) {
-        const id = data.stream.current_match.id;
-        const m = (data.matches || []).find(x => x.id === id);
-        if (m) m.status = "completed";
-      }
-      data.stream = { stream_url: null, is_live: false, current_match: null };
-      document.getElementById("streamUrl").value = "";
-      document.getElementById("isLive").checked = false;
-      try {
-        await saveData(data);
-        toast("OFFLINE", true);
-        render();
-      } catch { toast("Fail", false); }
-    }
+  // These presets are page URLs, not verified embed URLs.
+  // Confirm external embedding permission with the provider before using them.
+  data.stream = {
+    stream_url: iframe ? null : (url || null),
+    embed_url: iframe ? (url || null) : null,
+    is_live: live,
+    current_match: data.stream?.current_match || null
+  };
 
-    function resetMatchForm() {
-      editId = null;
-      document.getElementById("matchFormTitle").textContent = "Add Match";
-      document.getElementById("teamA").value = "";
-      document.getElementById("teamB").value = "";
-      document.getElementById("matchDate").value = "";
-      document.getElementById("matchStatus").value = "upcoming";
-      document.getElementById("posterUrl").value = "";
-      document.getElementById("cancelEdit").classList.add("hidden");
-    }
+  try {
+    await api("save", data);
+    showStatus("Stream settings saved. Website par test karo.", true);
+  } catch(e) {
+    showStatus("Save failed: " + e.message, false);
+  }
+}
 
-    function editMatch(id) {
-      const m = (data.matches || []).find(x => x.id === id);
-      if (!m) return;
-      editId = id;
-      document.getElementById("matchFormTitle").textContent = "Edit Match";
-      document.getElementById("teamA").value = m.team_a;
-      document.getElementById("teamB").value = m.team_b;
-      document.getElementById("matchDate").value = m.match_date ? m.match_date.slice(0, 16) : "";
-      document.getElementById("matchStatus").value = m.status;
-      document.getElementById("posterUrl").value = m.poster_url || "";
-      document.getElementById("cancelEdit").classList.remove("hidden");
-      showTab("matches");
-    }
+async function stopStream() {
+  data.stream = {
+    stream_url:null,
+    embed_url:null,
+    is_live:false,
+    current_match:null
+  };
+  try {
+    await api("save", data);
+    document.getElementById("streamUrl").value = "";
+    document.getElementById("live").checked = false;
+    showStatus("Stream stopped.", true);
+  } catch(e) {
+    showStatus("Stop failed: " + e.message, false);
+  }
+}
 
-    async function saveMatch() {
-      const team_a = document.getElementById("teamA").value.trim();
-      const team_b = document.getElementById("teamB").value.trim();
-      const match_date = document.getElementById("matchDate").value;
-      if (!team_a || !team_b || !match_date) { toast("Team A, B aur Date zaroori", false); return; }
-      const row = {
-        id: editId || ("m" + Date.now()),
-        team_a, team_b,
-        match_date: new Date(match_date).toISOString(),
-        status: document.getElementById("matchStatus").value,
-        poster_url: document.getElementById("posterUrl").value.trim() || null
-      };
-      if (!data.matches) data.matches = [];
-      if (editId) {
-        const i = data.matches.findIndex(x => x.id === editId);
-        if (i >= 0) data.matches[i] = row;
-      } else {
-        data.matches.push(row);
-      }
-      try {
-        await saveData(data);
-        toast(editId ? "Updated" : "Match add ho gaya", true);
-        resetMatchForm();
-        render();
-      } catch { toast("Save fail", false); }
-    }
+async function saveTelegram() {
+  data.settings = data.settings || {};
+  data.settings.telegram_link =
+    document.getElementById("telegram").value.trim() || "https://t.me/";
+  try {
+    await api("save", data);
+    showStatus("Telegram link saved.", true);
+  } catch(e) {
+    showStatus("Save failed: " + e.message, false);
+  }
+}
 
-    async function deleteMatch(id) {
-      if (!confirm("Delete?")) return;
-      data.matches = (data.matches || []).filter(m => m.id !== id);
-      try {
-        await saveData(data);
-        toast("Deleted", true);
-        render();
-      } catch { toast("Fail", false); }
-    }
+function showStatus(msg, ok) {
+  const el = document.getElementById("status");
+  el.textContent = msg;
+  el.className = "text-sm " + (ok ? "text-green-400" : "text-red-400");
+}
 
-    async function saveSettings() {
-      if (!data.settings) data.settings = {};
-      data.settings.telegram_link = document.getElementById("tgLink").value.trim() || "https://t.me/";
-      try {
-        await saveData(data);
-        toast("Settings saved", true);
-      } catch { toast("Fail", false); }
-    }
+document.getElementById("password").addEventListener("keydown", e => {
+  if (e.key === "Enter") login();
+});
 
-    document.getElementById("loginPass").addEventListener("keydown", e => { if (e.key === "Enter") doLogin(); });
-  </script>
+init();
+</script>
 </body>
 </html>
