@@ -4,6 +4,7 @@
   <meta charset="UTF-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1.0" />
   <title>N4B LIVE Admin</title>
+  <meta name="robots" content="noindex, nofollow" />
   <script src="https://cdn.tailwindcss.com"></script>
   <script>
     tailwind.config = {
@@ -35,7 +36,6 @@
       <input type="password" id="loginPass" class="mt-1 mb-4" placeholder="Admin password" />
       <button class="btn w-full" onclick="doLogin()">Sign In</button>
     </div>
-    <p class="text-center text-xs text-gray-600 mt-4">Default password: admin123</p>
   </div>
 
   <div id="adminPanel" class="hidden max-w-3xl mx-auto">
@@ -119,41 +119,32 @@
         <label class="text-sm text-gray-400">Telegram Link</label>
         <input type="url" id="tgLink" placeholder="https://t.me/yourchannel" class="mt-1" />
       </div>
-      <div>
-        <label class="text-sm text-gray-400">New Admin Password</label>
-        <input type="password" id="newPass" placeholder="Khali = change nahi" class="mt-1" />
-      </div>
       <button class="btn" onclick="saveSettings()">Save Settings</button>
     </div>
   </div>
 
   <script>
-    // ========== YAHAN APNI JSONBIN DETAILS DALO ==========
-const BIN_ID = "6ad25dbaffd5d1605371a41d";
-const API_KEY = "$2a$10$QPewNjYmnAyrAtzBOPw8pOjfRG4k9//0MvParyYhVTRsNUBhLopZO";
-    // =====================================================
-
-    const API = "https://api.jsonbin.io/v3/b/" + BIN_ID;
     let data = null;
     let editId = null;
+    let adminPass = sessionStorage.getItem("n4b_pass") || "";
+
+    async function callApi(action, payload) {
+      const res = await fetch("/api", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ pass: adminPass, action, data: payload })
+      });
+      if (res.status === 401) throw new Error("AUTH");
+      if (!res.ok) throw new Error("Request failed");
+      return await res.json();
+    }
 
     async function getData() {
-      const res = await fetch(API + "/latest", { headers: { "X-Master-Key": API_KEY } });
-      if (!res.ok) throw new Error("Load failed");
-      const json = await res.json();
-      return json.record;
+      return await callApi("load");
     }
 
     async function saveData(newData) {
-      const res = await fetch(API, {
-        method: "PUT",
-        headers: {
-          "Content-Type": "application/json",
-          "X-Master-Key": API_KEY
-        },
-        body: JSON.stringify(newData)
-      });
-      if (!res.ok) throw new Error("Save failed");
+      await callApi("save", newData);
       data = newData;
       return true;
     }
@@ -176,34 +167,32 @@ const API_KEY = "$2a$10$QPewNjYmnAyrAtzBOPw8pOjfRG4k9//0MvParyYhVTRsNUBhLopZO";
     }
 
     async function doLogin() {
+      adminPass = document.getElementById("loginPass").value;
+      const err = document.getElementById("loginError");
       try {
         data = await getData();
-        const pass = document.getElementById("loginPass").value;
-        const correct = (data.settings && data.settings.admin_pass) || "admin123";
-        if (pass === correct) {
-          sessionStorage.setItem("n4b_auth", "1");
-          document.getElementById("loginScreen").classList.add("hidden");
-          document.getElementById("adminPanel").classList.remove("hidden");
-          render();
-        } else {
-          document.getElementById("loginError").textContent = "Galat password";
-          document.getElementById("loginError").classList.remove("hidden");
-        }
+        sessionStorage.setItem("n4b_pass", adminPass);
+        document.getElementById("loginScreen").classList.add("hidden");
+        document.getElementById("adminPanel").classList.remove("hidden");
+        render();
       } catch (e) {
-        document.getElementById("loginError").textContent = "BIN_ID / API_KEY galat hai — check karo";
-        document.getElementById("loginError").classList.remove("hidden");
+        err.textContent = e.message === "AUTH" ? "Galat password" : "Server error, thodi der baad try karo";
+        err.classList.remove("hidden");
       }
     }
 
     function doLogout() {
-      sessionStorage.removeItem("n4b_auth");
+      sessionStorage.removeItem("n4b_pass");
       location.reload();
     }
 
-    if (sessionStorage.getItem("n4b_auth") === "1") {
-      document.getElementById("loginScreen").classList.add("hidden");
-      document.getElementById("adminPanel").classList.remove("hidden");
-      getData().then(d => { data = d; render(); }).catch(() => toast("Data load fail", false));
+    if (adminPass) {
+      getData().then(d => {
+        data = d;
+        document.getElementById("loginScreen").classList.add("hidden");
+        document.getElementById("adminPanel").classList.remove("hidden");
+        render();
+      }).catch(() => { sessionStorage.removeItem("n4b_pass"); adminPass = ""; });
     }
 
     function render() {
@@ -340,11 +329,8 @@ const API_KEY = "$2a$10$QPewNjYmnAyrAtzBOPw8pOjfRG4k9//0MvParyYhVTRsNUBhLopZO";
     async function saveSettings() {
       if (!data.settings) data.settings = {};
       data.settings.telegram_link = document.getElementById("tgLink").value.trim() || "https://t.me/";
-      const np = document.getElementById("newPass").value.trim();
-      if (np) data.settings.admin_pass = np;
       try {
         await saveData(data);
-        document.getElementById("newPass").value = "";
         toast("Settings saved", true);
       } catch { toast("Fail", false); }
     }
